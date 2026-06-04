@@ -1,0 +1,46 @@
+<svg width="960" height="640" viewBox="0 0 960 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Neon Brick Rally preview</title>
+  <desc id="desc">A preview image showing a neon brick-breaking arcade game layout.</desc>
+  <rect width="960" height="640" fill="#070b16"/>
+  <rect x="18" y="18" width="924" height="604" rx="10" fill="#0f172a" stroke="#22d3ee" stroke-width="6"/>
+  <text x="36" y="58" fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Score: 0</text>
+  <text x="432" y="58" fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Level: 1</text>
+  <text x="810" y="58" fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Lives: 3</text>
+  <g transform="translate(66 96)">
+    <rect x="0" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="84" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="168" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="252" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="336" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="420" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="504" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="588" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="672" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="756" y="0" width="72" height="28" fill="#ef4444"/>
+    <rect x="0" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="84" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="168" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="252" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="336" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="420" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="504" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="588" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="672" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="756" y="40" width="72" height="28" fill="#f97316"/>
+    <rect x="0" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="84" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="168" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="252" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="336" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="420" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="504" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="588" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="672" y="80" width="72" height="28" fill="#facc15"/>
+    <rect x="756" y="80" width="72" height="28" fill="#facc15"/>
+  </g>
+  <rect x="400" y="560" width="160" height="18" fill="#22c55e"/>
+  <circle cx="510" cy="500" r="14" fill="#facc15"/>
+  <rect x="600" y="410" width="24" height="24" fill="#c084fc" stroke="#f5d0fe" stroke-width="2"/>
+  <rect x="300" y="455" width="24" height="24" fill="#22d3ee" stroke="#f5d0fe" stroke-width="2"/>
+  <text x="304" y="472" fill="#082f49" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">+1</text>
+</svg>

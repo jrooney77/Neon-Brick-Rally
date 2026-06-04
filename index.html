@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neon Brick Rally</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-wrapper">
+    <h1>Neon Brick Rally</h1>
+    <p class="tagline">A modern brick-breaking arcade game built with Canvas.</p>
+    <div class="scoreboard">
+      <span>Score: <span id="scoreDisplay">0</span></span>
+      <span>Level: <span id="levelDisplay">1</span></span>
+      <span>Lives: <span id="livesDisplay">3</span></span>
+      <button id="muteButton" class="mute-button" type="button" aria-pressed="false">Sound On</button>
+    </div>
+    <canvas id="gameCanvas" width="960" height="640">
+      Your browser does not support the HTML canvas element.
+    </canvas>
+    <p class="hint">Press Space to start. Move with arrow keys, mouse, or touch.</p>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
