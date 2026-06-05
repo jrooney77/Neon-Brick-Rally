@@ -75,8 +75,6 @@ When the ball hits a brick, the brick is damaged or destroyed. Destroyed bricks 
 - Add local high score saving with `localStorage`
 - Add more powerup types
 - Add particle effects when bricks break
-- Add level names or short level intro text
-- Replace the preview image with a real gameplay screenshot or GIF
 - Add automated tests for level generation helper functions
 
 ## Learning Note

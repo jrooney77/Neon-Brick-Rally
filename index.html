@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Neon Brick Rally</title>
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=mobile-start-2">
 </head>
 <body>
   <main class="game-wrapper">
@@ -16,12 +16,13 @@
       <span>Lives: <span id="livesDisplay">3</span></span>
       <button id="muteButton" class="mute-button" type="button" aria-pressed="false">Sound On</button>
     </div>
+    <button id="actionButton" class="action-button" type="button">Start</button>
     <canvas id="gameCanvas" width="960" height="640">
       Your browser does not support the HTML canvas element.
     </canvas>
-    <p class="hint">Press Space to start. Move with arrow keys, mouse, or touch.</p>
+    <p id="hintText" class="hint">Press Space or Tap to Start. Move with arrow keys, mouse, or touch.</p>
   </main>
 
-  <script src="./script.js"></script>
+  <script src="./script.js?v=mobile-start-2"></script>
 </body>
 </html>

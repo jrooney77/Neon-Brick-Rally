@@ -65,6 +65,31 @@ h1 {
   background: #164e63;
 }
 
+.action-button {
+  display: inline-block;
+  min-width: 128px;
+  margin: 0 auto 10px;
+  padding: 10px 18px;
+  color: #020617;
+  background: #facc15;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.32);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.action-button:hover,
+.action-button:focus-visible {
+  background: #fde047;
+}
+
+.action-button[hidden] {
+  display: none;
+}
+
 canvas {
   display: block;
   width: 100%;

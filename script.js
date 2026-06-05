@@ -6,6 +6,8 @@ const scoreDisplay = document.getElementById("scoreDisplay");
 const levelDisplay = document.getElementById("levelDisplay");
 const livesDisplay = document.getElementById("livesDisplay");
 const muteButton = document.getElementById("muteButton");
+const actionButton = document.getElementById("actionButton");
+const hintText = document.getElementById("hintText");
 
 // Tuning values
 // Sound config. These use the browser's Web Audio API, so no sound files are needed.
@@ -91,10 +93,12 @@ let bricks = [];
 // Using window helps the game catch arrow keys as long as the page is active.
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
+canvas.addEventListener("click", handleCanvasClick);
 canvas.addEventListener("mousemove", handleMouseMove);
-canvas.addEventListener("touchstart", handleTouchMove, { passive: false });
+canvas.addEventListener("touchstart", handleCanvasTouchStart, { passive: false });
 canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
 muteButton.addEventListener("click", handleMuteClick);
+actionButton.addEventListener("click", handleActionButtonClick);
 
 function handleKeyDown(event) {
   unlockAudio();
@@ -108,13 +112,8 @@ function handleKeyDown(event) {
   } else if (event.key === " ") {
     event.preventDefault();
 
-    // Space starts the game from the start screen.
-    if (gameState === "start") {
-      gameState = "playing";
-    // After a game over or win, Space resets everything and starts again.
-    } else if (gameState === "gameOver" || gameState === "win") {
-      resetGame();
-    }
+    // Space keeps the original desktop start/restart behavior.
+    startOrRestartGame();
   }
 }
 
@@ -136,11 +135,39 @@ function isLeftArrow(event) {
   return event.key === "Left" || event.key === "ArrowLeft" || event.code === "ArrowLeft";
 }
 
+function handleCanvasClick() {
+  unlockAudio();
+
+  // A mouse click or mobile-generated click on the canvas can start/restart
+  // only from screens that are waiting for the player.
+  startOrRestartGame();
+}
+
 function handleMouseMove(event) {
   unlockAudio();
 
+  if (!canMovePaddleWithPointer()) {
+    return;
+  }
+
   // Mouse control: place the paddle center under the mouse while it is over the canvas.
   movePaddleToCanvasX(event.clientX);
+}
+
+function handleCanvasTouchStart(event) {
+  unlockAudio();
+  event.preventDefault();
+
+  // On phones, the first tap on the start/restart screens should only change
+  // the game state. It should not also jump the paddle to the tap position.
+  if (isWaitingForStartOrRestart()) {
+    startOrRestartGame();
+    return;
+  }
+
+  if (event.touches.length > 0 && canMovePaddleWithPointer()) {
+    movePaddleToCanvasX(event.touches[0].clientX);
+  }
 }
 
 function handleTouchMove(event) {
@@ -149,8 +176,30 @@ function handleTouchMove(event) {
   // Touch control: use the first finger to move the paddle on phones and tablets.
   event.preventDefault();
 
-  if (event.touches.length > 0) {
+  if (event.touches.length > 0 && canMovePaddleWithPointer()) {
     movePaddleToCanvasX(event.touches[0].clientX);
+  }
+}
+
+function handleActionButtonClick() {
+  unlockAudio();
+  startOrRestartGame();
+}
+
+function isWaitingForStartOrRestart() {
+  return gameState === "start" || gameState === "gameOver" || gameState === "win";
+}
+
+function canMovePaddleWithPointer() {
+  return gameState === "playing" || gameState === "levelTransition";
+}
+
+function startOrRestartGame() {
+  // Start from the opening screen. Restart only after game over or after winning.
+  if (gameState === "start") {
+    gameState = "playing";
+  } else if (gameState === "gameOver" || gameState === "win") {
+    resetGame();
   }
 }
 
@@ -352,11 +401,12 @@ function drawLives() {
 }
 
 function drawStartScreen() {
-  // The start state pauses movement until the player presses Space.
+  // The start state pauses movement until the player presses Space, taps,
+  // clicks the canvas, or uses the visible Start button.
   ctx.font = "36px Arial";
   ctx.fillStyle = "#f8fafc";
   ctx.textAlign = "center";
-  ctx.fillText("Press Space to Start", canvas.width / 2, canvas.height / 2);
+  ctx.fillText("Press Space or Tap to Start", canvas.width / 2, canvas.height / 2);
   ctx.textAlign = "left";
 }
 
@@ -386,7 +436,7 @@ function drawGameOverScreen() {
 
   ctx.font = "24px Arial";
   ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 14);
-  ctx.fillText("Press Space to Restart", canvas.width / 2, canvas.height / 2 + 54);
+  ctx.fillText("Press Space or Tap to Restart", canvas.width / 2, canvas.height / 2 + 54);
 
   ctx.textAlign = "left";
 }
@@ -401,9 +451,24 @@ function drawWinScreen() {
 
   ctx.font = "24px Arial";
   ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 14);
-  ctx.fillText("Press Space to Restart", canvas.width / 2, canvas.height / 2 + 54);
+  ctx.fillText("Press Space or Tap to Restart", canvas.width / 2, canvas.height / 2 + 54);
 
   ctx.textAlign = "left";
+}
+
+function updateActionControls() {
+  if (gameState === "start") {
+    actionButton.hidden = false;
+    actionButton.textContent = "Start";
+    hintText.textContent = "Press Space or Tap to Start. Move with arrow keys, mouse, or touch.";
+  } else if (gameState === "gameOver" || gameState === "win") {
+    actionButton.hidden = false;
+    actionButton.textContent = "Restart";
+    hintText.textContent = "Press Space or Tap to Restart.";
+  } else {
+    actionButton.hidden = true;
+    hintText.textContent = "Move with arrow keys, mouse, or touch.";
+  }
 }
 
 // Collision
@@ -883,6 +948,8 @@ function gameLoop() {
   } else if (gameState === "gameOver") {
     drawGameOverScreen();
   }
+
+  updateActionControls();
 
   // Ask the browser to run this function again before the next repaint.
   requestAnimationFrame(gameLoop);
