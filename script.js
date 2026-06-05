@@ -473,10 +473,10 @@ function drawBricks() {
         ctx.fillStyle = brick.color;
         ctx.fill();
 
-        // Bricks with 2 hits left get a dark border. After one hit, the border disappears.
+        // Bricks with 2 hits left get a bright neon border. After one hit, the border disappears.
         if (brick.hitsRemaining > 1) {
           ctx.lineWidth = 3;
-          ctx.strokeStyle = "#020617";
+          ctx.strokeStyle = "#f8fafc";
           ctx.stroke();
         }
 
@@ -1250,7 +1250,7 @@ function getDeterministicRandom(levelNumber, row, column) {
 }
 
 function getBrickHitCount(row, column, levelNumber) {
-  // Later levels introduce more two-hit bricks. These draw with dark borders.
+  // Later levels introduce more two-hit bricks. These draw with bright borders.
   if (levelNumber < 8) {
     return 1;
   }
