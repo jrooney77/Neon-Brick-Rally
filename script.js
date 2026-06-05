@@ -3,6 +3,7 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const scoreDisplay = document.getElementById("scoreDisplay");
+const highScoreDisplay = document.getElementById("highScoreDisplay");
 const levelDisplay = document.getElementById("levelDisplay");
 const livesDisplay = document.getElementById("livesDisplay");
 const muteButton = document.getElementById("muteButton");
@@ -74,6 +75,8 @@ const layoutTypes = [
 ];
 
 let score = 0;
+const highScoreStorageKey = "neonBrickRallyHighScore";
+let highScore = loadHighScore();
 let lives = 3;
 let level = 1;
 const maxLives = 5;
@@ -429,6 +432,48 @@ function drawLevel() {
 function updateScoreDisplay() {
   // Keep the HTML score display in sync with the score variable.
   scoreDisplay.textContent = score;
+
+  // If this run beats the saved high score, remember it right away.
+  if (score > highScore) {
+    updateHighScore(score);
+  }
+}
+
+function updateHighScoreDisplay() {
+  // Keep the HTML high score display in sync with the highScore variable.
+  highScoreDisplay.textContent = highScore;
+}
+
+function loadHighScore() {
+  // localStorage can be blocked in some browser privacy modes. If anything
+  // goes wrong, use an in-memory high score so the game still works.
+  try {
+    const savedHighScore = window.localStorage.getItem(highScoreStorageKey);
+    const parsedHighScore = Number.parseInt(savedHighScore, 10);
+
+    if (Number.isFinite(parsedHighScore) && parsedHighScore > 0) {
+      return parsedHighScore;
+    }
+  } catch (error) {
+    // Ignore storage errors and fall back to 0.
+  }
+
+  return 0;
+}
+
+function saveHighScore() {
+  // Saving should never interrupt gameplay, even if storage is unavailable.
+  try {
+    window.localStorage.setItem(highScoreStorageKey, String(highScore));
+  } catch (error) {
+    // Keep the in-memory high score for this browser session.
+  }
+}
+
+function updateHighScore(nextHighScore) {
+  highScore = nextHighScore;
+  updateHighScoreDisplay();
+  saveHighScore();
 }
 
 function updateLivesDisplay() {
@@ -454,6 +499,8 @@ function drawStartScreen() {
   ctx.fillStyle = "#f8fafc";
   ctx.textAlign = "center";
   ctx.fillText("Press Space or Tap to Start", canvas.width / 2, canvas.height / 2);
+  ctx.font = "24px Arial";
+  ctx.fillText(`High Score: ${highScore}`, canvas.width / 2, canvas.height / 2 + 42);
   ctx.textAlign = "left";
 }
 
@@ -474,7 +521,7 @@ function drawLevelCountdownScreen() {
 }
 
 function drawGameOverScreen() {
-  // The game over state shows the player's final score and waits for Space.
+  // The game over state shows the player's final score and waits for restart input.
   ctx.fillStyle = "#f8fafc";
   ctx.textAlign = "center";
 
@@ -483,13 +530,14 @@ function drawGameOverScreen() {
 
   ctx.font = "24px Arial";
   ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 14);
-  ctx.fillText("Press Space or Tap to Restart", canvas.width / 2, canvas.height / 2 + 54);
+  ctx.fillText(`High Score: ${highScore}`, canvas.width / 2, canvas.height / 2 + 50);
+  ctx.fillText("Press Space or Tap to Restart", canvas.width / 2, canvas.height / 2 + 90);
 
   ctx.textAlign = "left";
 }
 
 function drawWinScreen() {
-  // The win state shows the final score and waits for Space before restarting.
+  // The win state shows the final score and waits for restart input.
   ctx.fillStyle = "#f8fafc";
   ctx.textAlign = "center";
 
@@ -498,7 +546,8 @@ function drawWinScreen() {
 
   ctx.font = "24px Arial";
   ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 14);
-  ctx.fillText("Press Space or Tap to Restart", canvas.width / 2, canvas.height / 2 + 54);
+  ctx.fillText(`High Score: ${highScore}`, canvas.width / 2, canvas.height / 2 + 50);
+  ctx.fillText("Press Space or Tap to Restart", canvas.width / 2, canvas.height / 2 + 90);
 
   ctx.textAlign = "left";
 }
@@ -1042,4 +1091,5 @@ function gameLoop() {
 }
 
 createLevel(level);
+updateHighScoreDisplay();
 requestAnimationFrame(gameLoop);

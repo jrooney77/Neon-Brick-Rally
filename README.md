@@ -13,16 +13,19 @@ Neon Brick Rally is a Breakout-inspired arcade game made for learning HTML, CSS,
 - Gradual difficulty increase with capped ball speed
 - Two-hit bricks on later levels
 - Powerups for a wider paddle and extra lives
-- Score, lives, and level displays
+- Score, high score, lives, and level displays
 - Start screen, level countdown, game over screen, and final win screen
+- Tap/click start and restart support for phones, tablets, and desktop browsers
+- Pause and resume support with the `P` key or on-screen button
+- Local high score saving with `localStorage`, with an in-memory fallback if storage is unavailable
 - Simple Web Audio sound effects with a mute toggle
 - No external libraries
 
 ## Files Used
 
-- `index.html` - page structure, game title, scoreboard, mute button, canvas, and script/style links
+- `index.html` - page structure, game title, scoreboard, high score display, control buttons, canvas, and script/style links
 - `style.css` - layout, responsive canvas sizing, arcade colors, and UI styling
-- `script.js` - game setup, drawing, controls, collision detection, levels, powerups, sound, and game loop
+- `script.js` - game setup, drawing, controls, collision detection, levels, powerups, pause state, high score saving, sound, and game loop
 - `screenshots/neon-brick-rally-preview.svg` - lightweight project preview image for GitHub
 
 ## How To Run The Game
@@ -56,9 +59,11 @@ To publish it:
 
 - Press `Space` to start the game.
 - Press `Space` after game over or winning to restart.
+- Tap or click the canvas, `Start`, or `Restart` to start and restart without a keyboard.
 - Use the left and right arrow keys to move the paddle.
 - Move the mouse over the canvas to control the paddle.
 - Drag on the canvas on a touch device to control the paddle.
+- Press `P` or use the `Pause` / `Resume` button to pause or resume active gameplay.
 - Use the `Sound On` / `Sound Off` button to mute or unmute sound effects.
 
 ## How The Game Works
@@ -69,10 +74,10 @@ Levels are generated from reusable layout patterns instead of being manually har
 
 When the ball hits a brick, the brick is damaged or destroyed. Destroyed bricks increase the score and may drop a powerup. Clearing all visible bricks advances to the next level. Clearing level 50 shows the final win screen.
 
+The high score is loaded from `localStorage` when the page opens. Whenever the current score beats the saved high score, the new value is saved immediately. If the browser blocks `localStorage`, the game keeps running and stores the high score in memory for the current session.
+
 ## Possible Future Improvements
 
-- Add a pause button
-- Add local high score saving with `localStorage`
 - Add more powerup types
 - Add particle effects when bricks break
 - Add automated tests for level generation helper functions
