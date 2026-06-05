@@ -12,7 +12,7 @@ Neon Brick Rally is a Breakout-inspired arcade game made for learning HTML, CSS,
 - 10 brick layouts, including full grid, checkerboard, pyramid, diamond, border, columns, stripes, staggered, random gaps, and cross
 - Gradual difficulty increase with capped ball speed
 - Two-hit bricks on later levels
-- Powerups for a wider paddle and extra lives
+- Powerups for a wider paddle, extra lives, slow ball, and a one-use safety net
 - Score, high score, lives, and level displays
 - Start screen, level countdown, game over screen, and final win screen
 - Tap/click start and restart support for phones, tablets, and desktop browsers
@@ -73,7 +73,11 @@ The game uses an HTML `<canvas>` element for all gameplay drawing. JavaScript up
 
 Levels are generated from reusable layout patterns instead of being manually hard-coded. The layout pattern rotates every 10 levels, while later levels increase difficulty with faster ball speed, more rows, and more two-hit bricks.
 
-When the ball hits a brick, the brick is damaged or destroyed. Destroyed bricks increase the score and may drop a powerup. Clearing all visible bricks advances to the next level. Clearing level 50 shows the final win screen.
+When the ball hits a brick, the brick is damaged or destroyed. Destroyed bricks increase the score and may drop a powerup. Most bricks drop nothing, and only two falling powerups can be active at once so the game stays readable. The `+1` life powerup is only eligible on even-numbered levels and never raises lives above the maximum.
+
+Wide paddle, slow ball, and safety net powerups use timers. Collecting another wide or slow powerup refreshes its timer instead of stacking the effect. The safety net appears below the paddle, catches one missed ball, then disappears. Powerup timers pause when the game is paused.
+
+Clearing all visible bricks advances to the next level. Clearing level 50 shows the final win screen.
 
 The high score is loaded from `localStorage` when the page opens. Whenever the current score beats the saved high score, the new value is saved immediately. If the browser blocks `localStorage`, the game keeps running and stores the high score in memory for the current session.
 
@@ -81,7 +85,7 @@ When a brick breaks, the game spawns a small burst of color-matched particles an
 
 ## Possible Future Improvements
 
-- Add more powerup types
+- Add more brick layouts
 - Add automated tests for level generation helper functions
 
 ## Learning Note

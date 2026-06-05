@@ -40,11 +40,44 @@ let paddleX = (canvas.width - paddleWidth) / 2;
 // Powerup config.
 const powerupSize = 24;
 const powerupSpeed = 4;
-const widePaddleDropChance = 0.3;
-const extraLifeDropChance = 0.15;
-const powerupDuration = 5000;
+const powerupDropChance = 0.18;
+const maxFallingPowerups = 2;
+const widePaddleDuration = 8000;
+const slowBallDuration = 9000;
+const safetyNetDuration = 12000;
+const slowBallSpeedMultiplier = 0.7;
+const minSlowBallSpeed = 4.2;
+const safetyNetY = canvas.height - ballRadius - 2;
 let powerups = [];
 let paddlePowerupEndTime = 0;
+let slowBallEndTime = 0;
+let safetyNetEndTime = 0;
+const powerupDefinitions = {
+  wide: {
+    label: "W",
+    fillColor: "#c084fc",
+    borderColor: "#f5d0fe",
+    textColor: "#2e1065"
+  },
+  life: {
+    label: "+1",
+    fillColor: "#22d3ee",
+    borderColor: "#cffafe",
+    textColor: "#082f49"
+  },
+  slow: {
+    label: "S",
+    fillColor: "#60a5fa",
+    borderColor: "#bfdbfe",
+    textColor: "#082f49"
+  },
+  safetyNet: {
+    label: "NET",
+    fillColor: "#34d399",
+    borderColor: "#bbf7d0",
+    textColor: "#052e16"
+  }
+};
 
 // Simple visual effects. These arrays stay small and old items are removed
 // as soon as they fade out, which keeps performance reasonable on phones.
@@ -251,6 +284,14 @@ function resumeGame() {
     paddlePowerupEndTime += pausedDuration;
   }
 
+  if (isSlowBallActive()) {
+    slowBallEndTime += pausedDuration;
+  }
+
+  if (isSafetyNetActive()) {
+    safetyNetEndTime += pausedDuration;
+  }
+
   pauseStartedAt = 0;
   gameState = "playing";
 }
@@ -381,23 +422,41 @@ function drawPaddle() {
 }
 
 function drawPowerups() {
-  // Powerups are small falling squares. Different colors mean different effects.
+  // Powerups are small falling squares. Each type has its own color and label.
   for (const powerup of powerups) {
+    const definition = powerupDefinitions[powerup.type];
+
     ctx.beginPath();
     ctx.rect(powerup.x, powerup.y, powerup.width, powerup.height);
-    ctx.fillStyle = powerup.type === "extraLife" ? "#22d3ee" : "#c084fc";
+    ctx.fillStyle = definition.fillColor;
     ctx.fill();
-    ctx.strokeStyle = "#f5d0fe";
+    ctx.strokeStyle = definition.borderColor;
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.closePath();
 
-    if (powerup.type === "extraLife") {
-      ctx.font = "14px Arial";
-      ctx.fillStyle = "#082f49";
-      ctx.fillText("+1", powerup.x + 4, powerup.y + 17);
-    }
+    ctx.font = definition.label.length > 1 ? "11px Arial" : "14px Arial";
+    ctx.fillStyle = definition.textColor;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(definition.label, powerup.x + powerup.width / 2, powerup.y + powerup.height / 2 + 1);
   }
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+}
+
+function drawSafetyNet() {
+  if (!isSafetyNetActive()) {
+    return;
+  }
+
+  // The safety net sits below the paddle and catches one missed ball.
+  ctx.fillStyle = "#34d399";
+  ctx.fillRect(48, safetyNetY, canvas.width - 96, 6);
+  ctx.strokeStyle = "#bbf7d0";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(48, safetyNetY - 1, canvas.width - 96, 8);
 }
 
 function drawBricks() {
@@ -780,9 +839,15 @@ function movePaddle() {
 function moveBall() {
   checkWallCollisions();
 
-  if (!checkPaddleCollision() && ballY + ballSpeedY > canvas.height - ballRadius) {
-    loseLife();
-    return;
+  if (!checkPaddleCollision()) {
+    if (checkSafetyNetCollision()) {
+      return;
+    }
+
+    if (ballY + ballSpeedY > canvas.height - ballRadius) {
+      loseLife();
+      return;
+    }
   }
 
   // Move the ball diagonally by changing both its x and y positions each frame.
@@ -792,23 +857,36 @@ function moveBall() {
 
 // Powerups
 function maybeCreatePowerup(brick) {
-  // Even-numbered levels can drop +1 life powerups, capped at maxLives.
-  if (level % 2 === 0 && lives < maxLives && Math.random() < extraLifeDropChance) {
-    spawnPowerup("extraLife", brick);
+  // Most bricks drop nothing. Also keep only a couple of falling powerups
+  // on-screen at once so the game stays readable on desktop and mobile.
+  if (powerups.length >= maxFallingPowerups || Math.random() > powerupDropChance) {
     return;
   }
 
-  // Any level can drop the wide-paddle powerup.
-  if (Math.random() < widePaddleDropChance) {
-    spawnPowerup("widePaddle", brick);
+  const type = choosePowerupType();
+
+  if (type) {
+    spawnPowerup(type, brick.x + brick.width / 2, brick.y + brick.height / 2);
   }
 }
 
-function spawnPowerup(type, brick) {
+function choosePowerupType() {
+  // Add each type to the pool multiple times to make simple weighted odds.
+  // +1 Life only enters the pool on even levels and when lives are below max.
+  const powerupPool = ["wide", "wide", "wide", "slow", "slow", "safetyNet", "safetyNet"];
+
+  if (level % 2 === 0 && lives < maxLives) {
+    powerupPool.push("life", "life");
+  }
+
+  return powerupPool[Math.floor(Math.random() * powerupPool.length)];
+}
+
+function spawnPowerup(type, x, y) {
   powerups.push({
     type: type,
-    x: brick.x + brick.width / 2 - powerupSize / 2,
-    y: brick.y + brick.height / 2,
+    x: x - powerupSize / 2,
+    y: y,
     width: powerupSize,
     height: powerupSize
   });
@@ -820,8 +898,8 @@ function updatePowerups() {
     const powerup = powerups[index];
     powerup.y += powerupSpeed;
 
-    if (isPowerupCaught(powerup)) {
-      activatePowerup(powerup.type);
+    if (checkPowerupCollection(powerup)) {
+      applyPowerup(powerup.type);
       powerups.splice(index, 1);
     } else if (powerup.y > canvas.height) {
       powerups.splice(index, 1);
@@ -829,7 +907,7 @@ function updatePowerups() {
   }
 }
 
-function isPowerupCaught(powerup) {
+function checkPowerupCollection(powerup) {
   const powerupBottom = powerup.y + powerup.height;
   const powerupRight = powerup.x + powerup.width;
   const paddleRight = paddleX + paddleWidth;
@@ -842,28 +920,50 @@ function isPowerupCaught(powerup) {
   );
 }
 
-function activatePowerup(type) {
-  if (type === "extraLife") {
-    activateExtraLife();
-  } else {
-    activateWidePaddle();
+function applyPowerup(type) {
+  if (type === "wide") {
+    applyWidePaddlePowerup();
+  } else if (type === "life") {
+    applyLifePowerup();
+  } else if (type === "slow") {
+    applySlowBallPowerup();
+  } else if (type === "safetyNet") {
+    applySafetyNetPowerup();
   }
 }
 
-function activateWidePaddle() {
-  // Catching the powerup makes the paddle wider for a few seconds.
+function applyWidePaddlePowerup() {
+  // Catching W makes the paddle wider. Re-collecting refreshes the timer
+  // instead of making the paddle wider and wider.
   paddleWidth = widePaddleWidth;
-  paddlePowerupEndTime = Date.now() + powerupDuration;
+  paddlePowerupEndTime = Date.now() + widePaddleDuration;
   paddleX = clampPaddleX(paddleX);
 }
 
-function activateExtraLife() {
+function applyLifePowerup() {
   // Extra-life powerups add one life, but never above the maximum.
   lives = Math.min(lives + 1, maxLives);
   updateLivesDisplay();
 }
 
-function updatePaddlePowerup() {
+function applySlowBallPowerup() {
+  // Slow Ball refreshes its duration instead of stacking into unusable speed.
+  slowBallEndTime = Date.now() + slowBallDuration;
+  setBallComponentSpeed(getSlowBallSpeedForLevel(level));
+}
+
+function applySafetyNetPowerup() {
+  // The net catches one missed ball, or expires after a short time if unused.
+  safetyNetEndTime = Date.now() + safetyNetDuration;
+}
+
+function updateActivePowerupTimers() {
+  updateWidePaddleTimer();
+  updateSlowBallTimer();
+  updateSafetyNetTimer();
+}
+
+function updateWidePaddleTimer() {
   // When the timer ends, return the paddle to its normal size.
   if (paddleWidth === widePaddleWidth && Date.now() >= paddlePowerupEndTime) {
     paddleWidth = normalPaddleWidth;
@@ -872,10 +972,33 @@ function updatePaddlePowerup() {
   }
 }
 
+function updateSlowBallTimer() {
+  if (isSlowBallActive() && Date.now() >= slowBallEndTime) {
+    slowBallEndTime = 0;
+    setBallComponentSpeed(getBallSpeedForLevel(level));
+  }
+}
+
+function updateSafetyNetTimer() {
+  if (isSafetyNetActive() && Date.now() >= safetyNetEndTime) {
+    safetyNetEndTime = 0;
+  }
+}
+
+function isSlowBallActive() {
+  return slowBallEndTime > 0;
+}
+
+function isSafetyNetActive() {
+  return safetyNetEndTime > 0;
+}
+
 function clearPowerups() {
   powerups = [];
   paddleWidth = normalPaddleWidth;
   paddlePowerupEndTime = 0;
+  slowBallEndTime = 0;
+  safetyNetEndTime = 0;
 }
 
 // Collision helpers
@@ -894,6 +1017,22 @@ function checkWallCollisions() {
   if (nextBallY < ballRadius) {
     ballSpeedY = -ballSpeedY;
   }
+}
+
+function checkSafetyNetCollision() {
+  const nextBallY = ballY + ballSpeedY;
+  const nextBallBottom = nextBallY + ballRadius;
+  const isMovingDown = ballSpeedY > 0;
+
+  if (isSafetyNetActive() && isMovingDown && nextBallBottom >= safetyNetY) {
+    ballY = safetyNetY - ballRadius;
+    ballSpeedY = -Math.abs(ballSpeedY);
+    safetyNetEndTime = 0;
+    playSound("paddle");
+    return true;
+  }
+
+  return false;
 }
 
 function checkPaddleCollision() {
@@ -924,7 +1063,7 @@ function checkPaddleCollision() {
 
 // Levels
 function resetBall() {
-  const levelSpeed = getBallSpeedForLevel(level);
+  const levelSpeed = getActiveBallSpeedForLevel(level);
 
   ballX = ballStartX;
   ballY = ballStartY;
@@ -932,10 +1071,38 @@ function resetBall() {
   ballSpeedY = -levelSpeed;
 }
 
+function getActiveBallSpeedForLevel(levelNumber) {
+  if (isSlowBallActive()) {
+    return getSlowBallSpeedForLevel(levelNumber);
+  }
+
+  return getBallSpeedForLevel(levelNumber);
+}
+
 function getBallSpeedForLevel(levelNumber) {
   // Increase speed every few levels, but cap it so the game stays playable.
   const speedIncrease = Math.floor((levelNumber - 1) / 3) * 0.35;
   return Math.min(ballStartSpeedX + speedIncrease, maxBallSpeed);
+}
+
+function getSlowBallSpeedForLevel(levelNumber) {
+  // Slow Ball reduces speed, but keeps a floor so the game never crawls.
+  return Math.max(getBallSpeedForLevel(levelNumber) * slowBallSpeedMultiplier, minSlowBallSpeed);
+}
+
+function setBallComponentSpeed(targetSpeed) {
+  // Preserve the current ball direction while changing its speed.
+  const currentLargestComponent = Math.max(Math.abs(ballSpeedX), Math.abs(ballSpeedY));
+
+  if (currentLargestComponent === 0) {
+    ballSpeedX = targetSpeed;
+    ballSpeedY = -targetSpeed;
+    return;
+  }
+
+  const scale = targetSpeed / currentLargestComponent;
+  ballSpeedX *= scale;
+  ballSpeedY *= scale;
 }
 
 function resetBallAndPaddle() {
@@ -1173,13 +1340,14 @@ function gameLoop() {
   drawFloatingTexts();
 
   if (gameState !== "paused") {
-    updatePaddlePowerup();
+    updateActivePowerupTimers();
     updateParticles(deltaTime);
     updateFloatingTexts(deltaTime);
     movePaddle();
   }
 
   drawPaddle();
+  drawSafetyNet();
   drawScore();
   drawLevel();
   drawLives();
