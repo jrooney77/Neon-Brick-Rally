@@ -2,7 +2,7 @@
 
 Neon Brick Rally is a Breakout-inspired arcade game made for learning HTML, CSS, JavaScript, and the Canvas API. The player controls a paddle, bounces a ball into colorful bricks, collects powerups, and advances through generated levels.
 
-![Neon Brick Rally preview](screenshots/neon-brick-rally-preview.png)
+![Neon Brick Rally preview](./screenshots/neon-brick-rally-preview.png)
 
 ## Features
 
@@ -30,6 +30,27 @@ Neon Brick Rally is a Breakout-inspired arcade game made for learning HTML, CSS,
 Open `index.html` directly in a web browser.
 
 No build step, package install, or server is required.
+
+To test the site the same way it will be served as a static website, run:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/` in your browser.
+
+## GitHub Pages
+
+This project is ready to publish with GitHub Pages because `index.html`, `style.css`, and `script.js` are in the repository root and use relative paths.
+
+To publish it:
+
+1. Push the project to a GitHub repository.
+2. In GitHub, open the repository's `Settings` tab.
+3. Select `Pages` in the sidebar.
+4. Under `Build and deployment`, set `Source` to `Deploy from a branch`.
+5. Select the branch you want to publish, usually `main`, and set the folder to `/ (root)`.
+6. Save the settings and wait for GitHub Pages to provide the site URL.
 
 ## Controls
 
