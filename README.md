@@ -20,20 +20,21 @@ Neon Brick Rally is a Breakout-inspired arcade game made for learning HTML, CSS,
 - Local high score saving with `localStorage`, with an in-memory fallback if storage is unavailable
 - Brick break particle bursts and floating score text
 - Simple Web Audio sound effects with a mute toggle
-- No external libraries
+- No external libraries or build step
 
 ## Files Used
 
 - `index.html` - page structure, game title, scoreboard, high score display, control buttons, canvas, and script/style links
 - `style.css` - layout, responsive canvas sizing, arcade colors, and UI styling
 - `script.js` - game setup, drawing, controls, collision detection, levels, powerups, pause state, high score saving, particle effects, sound, and game loop
+- `tests/level-generation.test.js` - Node.js tests for level generation, layout bounds, powerup eligibility, and difficulty values
 - `screenshots/neon-brick-rally-preview.svg` - lightweight project preview image for GitHub
 
 ## How To Run The Game
 
-Open `index.html` directly in a web browser.
+No build step or package install is required.
 
-No build step, package install, or server is required.
+You can open `index.html` directly in a web browser. For the closest match to GitHub Pages, run a simple local static server:
 
 To test the site the same way it will be served as a static website, run:
 
@@ -42,6 +43,24 @@ python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000/` in your browser.
+
+## Tests
+
+The project includes simple Node.js tests for helper logic that can run without opening a browser. They use Node's built-in test runner, so no external packages are required.
+
+Run them with:
+
+```bash
+node --test tests/level-generation.test.js
+```
+
+The tests check:
+
+- Levels 1 through 50 all create visible bricks
+- The level rotation uses all layout types
+- `+1` life powerups are eligible only on even-numbered levels
+- Generated bricks stay inside the canvas bounds
+- Difficulty values such as rows, ball speed, and brick hit counts stay within expected limits
 
 ## GitHub Pages
 
@@ -75,6 +94,13 @@ Levels are generated from reusable layout patterns instead of being manually har
 
 When the ball hits a brick, the brick is damaged or destroyed. Destroyed bricks increase the score and may drop a powerup. Most bricks drop nothing, and only two falling powerups can be active at once so the game stays readable. The `+1` life powerup is only eligible on even-numbered levels and never raises lives above the maximum.
 
+Powerups:
+
+- `W` widens the paddle temporarily.
+- `+1` adds one life, up to the maximum.
+- `S` slows the ball temporarily without stacking into an unusable speed.
+- `NET` creates a one-use safety net below the paddle.
+
 Wide paddle, slow ball, and safety net powerups use timers. Collecting another wide or slow powerup refreshes its timer instead of stacking the effect. The safety net appears below the paddle, catches one missed ball, then disappears. Powerup timers pause when the game is paused.
 
 Clearing all visible bricks advances to the next level. Clearing level 50 shows the final win screen.
@@ -86,7 +112,6 @@ When a brick breaks, the game spawns a small burst of color-matched particles an
 ## Possible Future Improvements
 
 - Add more brick layouts
-- Add automated tests for level generation helper functions
 
 ## Learning Note
 

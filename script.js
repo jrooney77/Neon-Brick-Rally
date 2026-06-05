@@ -10,6 +10,7 @@ const muteButton = document.getElementById("muteButton");
 const pauseButton = document.getElementById("pauseButton");
 const actionButton = document.getElementById("actionButton");
 const hintText = document.getElementById("hintText");
+const isAutomatedTest = typeof window !== "undefined" && window.__NEON_BRICK_RALLY_TEST__ === true;
 
 // Tuning values
 // Sound config. These use the browser's Web Audio API, so no sound files are needed.
@@ -871,15 +872,21 @@ function maybeCreatePowerup(brick) {
 }
 
 function choosePowerupType() {
+  const powerupPool = getEligiblePowerupTypes(level, lives);
+
+  return powerupPool[Math.floor(Math.random() * powerupPool.length)];
+}
+
+function getEligiblePowerupTypes(levelNumber, livesCount) {
   // Add each type to the pool multiple times to make simple weighted odds.
   // +1 Life only enters the pool on even levels and when lives are below max.
   const powerupPool = ["wide", "wide", "wide", "slow", "slow", "safetyNet", "safetyNet"];
 
-  if (level % 2 === 0 && lives < maxLives) {
+  if (levelNumber % 2 === 0 && livesCount < maxLives) {
     powerupPool.push("life", "life");
   }
 
-  return powerupPool[Math.floor(Math.random() * powerupPool.length)];
+  return powerupPool;
 }
 
 function spawnPowerup(type, x, y) {
@@ -1382,7 +1389,33 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-createLevel(level);
-updateHighScoreDisplay();
-lastFrameTime = performance.now();
-requestAnimationFrame(gameLoop);
+if (!isAutomatedTest) {
+  createLevel(level);
+  updateHighScoreDisplay();
+  lastFrameTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    canvasWidth: canvas.width,
+    canvasHeight: canvas.height,
+    maxLevel: maxLevel,
+    maxLives: maxLives,
+    maxBallSpeed: maxBallSpeed,
+    baseBrickRows: baseBrickRows,
+    maxBrickRows: maxBrickRows,
+    brickColumns: brickColumns,
+    brickWidth: brickWidth,
+    brickHeight: brickHeight,
+    brickPadding: brickPadding,
+    layoutTypes: layoutTypes,
+    createBrickGrid: createBrickGrid,
+    countVisibleCells: countVisibleCells,
+    getBallSpeedForLevel: getBallSpeedForLevel,
+    getBrickHitCount: getBrickHitCount,
+    getEligiblePowerupTypes: getEligiblePowerupTypes,
+    getLayoutType: getLayoutType,
+    getRowCountForLevel: getRowCountForLevel
+  };
+}
