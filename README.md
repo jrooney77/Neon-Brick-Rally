@@ -18,6 +18,7 @@ Neon Brick Rally is a Breakout-inspired arcade game made for learning HTML, CSS,
 - Tap/click start and restart support for phones, tablets, and desktop browsers
 - Pause and resume support with the `P` key or on-screen button
 - Local high score saving with `localStorage`, with an in-memory fallback if storage is unavailable
+- Brick break particle bursts and floating score text
 - Simple Web Audio sound effects with a mute toggle
 - No external libraries
 
@@ -25,7 +26,7 @@ Neon Brick Rally is a Breakout-inspired arcade game made for learning HTML, CSS,
 
 - `index.html` - page structure, game title, scoreboard, high score display, control buttons, canvas, and script/style links
 - `style.css` - layout, responsive canvas sizing, arcade colors, and UI styling
-- `script.js` - game setup, drawing, controls, collision detection, levels, powerups, pause state, high score saving, sound, and game loop
+- `script.js` - game setup, drawing, controls, collision detection, levels, powerups, pause state, high score saving, particle effects, sound, and game loop
 - `screenshots/neon-brick-rally-preview.svg` - lightweight project preview image for GitHub
 
 ## How To Run The Game
@@ -76,10 +77,11 @@ When the ball hits a brick, the brick is damaged or destroyed. Destroyed bricks 
 
 The high score is loaded from `localStorage` when the page opens. Whenever the current score beats the saved high score, the new value is saved immediately. If the browser blocks `localStorage`, the game keeps running and stores the high score in memory for the current session.
 
+When a brick breaks, the game spawns a small burst of color-matched particles and a floating score label. The effects pause with the rest of the game and remove themselves after fading out.
+
 ## Possible Future Improvements
 
 - Add more powerup types
-- Add particle effects when bricks break
 - Add automated tests for level generation helper functions
 
 ## Learning Note

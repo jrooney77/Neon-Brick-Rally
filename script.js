@@ -46,6 +46,16 @@ const powerupDuration = 5000;
 let powerups = [];
 let paddlePowerupEndTime = 0;
 
+// Simple visual effects. These arrays stay small and old items are removed
+// as soon as they fade out, which keeps performance reasonable on phones.
+const particlesPerBrick = 10;
+const maxParticles = 120;
+const floatingTextLifetime = 650;
+const brickScoreValue = 1;
+let particles = [];
+let floatingTexts = [];
+let lastFrameTime = 0;
+
 // These remember whether the player is holding an arrow key down.
 let rightPressed = false;
 let leftPressed = false;
@@ -61,6 +71,7 @@ const brickOffsetTop = 82;
 const brickWallWidth = brickColumns * brickWidth + (brickColumns - 1) * brickPadding;
 const brickOffsetLeft = (canvas.width - brickWallWidth) / 2;
 const minVisibleBricks = 10;
+const brickColors = ["#ef4444", "#f97316", "#facc15", "#22c55e", "#38bdf8", "#a78bfa", "#fb7185"];
 const layoutTypes = [
   "fullGrid",
   "checkerboard",
@@ -390,8 +401,6 @@ function drawPowerups() {
 }
 
 function drawBricks() {
-  const brickColors = ["#ef4444", "#f97316", "#facc15", "#22c55e", "#38bdf8", "#a78bfa", "#fb7185"];
-
   // Loop through every column and row in the brick grid.
   for (let column = 0; column < bricks.length; column++) {
     for (let row = 0; row < bricks[column].length; row++) {
@@ -401,7 +410,7 @@ function drawBricks() {
       if (brick.visible) {
         ctx.beginPath();
         ctx.rect(brick.x, brick.y, brick.width, brick.height);
-        ctx.fillStyle = brickColors[row % brickColors.length];
+        ctx.fillStyle = brick.color;
         ctx.fill();
 
         // Bricks with 2 hits left get a dark border. After one hit, the border disappears.
@@ -415,6 +424,10 @@ function drawBricks() {
       }
     }
   }
+}
+
+function getBrickColor(row) {
+  return brickColors[row % brickColors.length];
 }
 
 function drawScore() {
@@ -598,6 +611,104 @@ function updatePauseControl() {
   }
 }
 
+function spawnBrickParticles(brick) {
+  // Particles start from the broken brick's center and fly outward.
+  const centerX = brick.x + brick.width / 2;
+  const centerY = brick.y + brick.height / 2;
+
+  for (let count = 0; count < particlesPerBrick; count++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.08 + Math.random() * 0.14;
+
+    particles.push({
+      x: centerX,
+      y: centerY,
+      size: 3 + Math.random() * 3,
+      color: brick.color,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      age: 0,
+      lifetime: 400 + Math.random() * 300
+    });
+  }
+
+  // If many bricks break quickly, trim the oldest particles first.
+  if (particles.length > maxParticles) {
+    particles.splice(0, particles.length - maxParticles);
+  }
+}
+
+function updateParticles(deltaTime) {
+  // Move particles and age them. Loop backward so removal is safe.
+  for (let index = particles.length - 1; index >= 0; index--) {
+    const particle = particles[index];
+    particle.x += particle.vx * deltaTime;
+    particle.y += particle.vy * deltaTime;
+    particle.age += deltaTime;
+
+    if (particle.age >= particle.lifetime) {
+      particles.splice(index, 1);
+    }
+  }
+}
+
+function drawParticles() {
+  for (const particle of particles) {
+    const alpha = 1 - particle.age / particle.lifetime;
+
+    ctx.globalAlpha = Math.max(alpha, 0);
+    ctx.fillStyle = particle.color;
+    ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+function spawnFloatingText(text, x, y) {
+  // Floating score labels rise slowly and fade out near the broken brick.
+  floatingTexts.push({
+    text: text,
+    x: x,
+    y: y,
+    vy: -0.06,
+    age: 0,
+    lifetime: floatingTextLifetime
+  });
+}
+
+function updateFloatingTexts(deltaTime) {
+  for (let index = floatingTexts.length - 1; index >= 0; index--) {
+    const floatingText = floatingTexts[index];
+    floatingText.y += floatingText.vy * deltaTime;
+    floatingText.age += deltaTime;
+
+    if (floatingText.age >= floatingText.lifetime) {
+      floatingTexts.splice(index, 1);
+    }
+  }
+}
+
+function drawFloatingTexts() {
+  ctx.font = "20px Arial";
+  ctx.textAlign = "center";
+
+  for (const floatingText of floatingTexts) {
+    const alpha = 1 - floatingText.age / floatingText.lifetime;
+
+    ctx.globalAlpha = Math.max(alpha, 0);
+    ctx.fillStyle = "#facc15";
+    ctx.fillText(floatingText.text, floatingText.x, floatingText.y);
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.textAlign = "left";
+}
+
+function clearEffects() {
+  particles = [];
+  floatingTexts = [];
+}
+
 // Collision
 function checkBrickCollisions() {
   for (let column = 0; column < bricks.length; column++) {
@@ -634,11 +745,14 @@ function checkBrickCollisions() {
           return;
         }
 
-        // Hide one-hit bricks, add one point, and count one fewer brick.
+        // Hide one-hit bricks, add points, count one fewer brick, and show
+        // small visual effects. These effects do not affect collision logic.
         brick.visible = false;
-        score++;
+        score += brickScoreValue;
         bricksRemaining--;
         updateScoreDisplay();
+        spawnBrickParticles(brick);
+        spawnFloatingText(`+${brickScoreValue}`, brick.x + brick.width / 2, brick.y + brick.height / 2);
         maybeCreatePowerup(brick);
 
         // If every brick in this level is gone, move forward or finish the game.
@@ -856,6 +970,7 @@ function resetGame() {
   updateLevelDisplay();
   gameState = "playing";
   clearPowerups();
+  clearEffects();
   createLevel(level);
   resetBallAndPaddle();
   rightPressed = false;
@@ -893,6 +1008,7 @@ function createBrickGrid(layoutType, levelNumber) {
         width: brickWidth,
         height: brickHeight,
         hitsRemaining: visible ? getBrickHitCount(row, column, levelNumber) : 1,
+        color: getBrickColor(row),
         visible: visible
       };
     }
@@ -1043,15 +1159,23 @@ function updateLevelCountdown() {
 
 // Game Loop
 function gameLoop() {
+  const currentFrameTime = performance.now();
+  const deltaTime = Math.min(currentFrameTime - lastFrameTime, 40);
+  lastFrameTime = currentFrameTime;
+
   // Clear the canvas before drawing the next frame.
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   drawBricks();
   drawBall();
   drawPowerups();
+  drawParticles();
+  drawFloatingTexts();
 
   if (gameState !== "paused") {
     updatePaddlePowerup();
+    updateParticles(deltaTime);
+    updateFloatingTexts(deltaTime);
     movePaddle();
   }
 
@@ -1092,4 +1216,5 @@ function gameLoop() {
 
 createLevel(level);
 updateHighScoreDisplay();
+lastFrameTime = performance.now();
 requestAnimationFrame(gameLoop);
